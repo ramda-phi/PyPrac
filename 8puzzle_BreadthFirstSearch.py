@@ -57,5 +57,66 @@ def print_answer(x):
         print x.board
 
 
+#if __name__ == '__main__':
+#    bf_search([8, 6, 7, 2, 5, 4, 3, 0, 1])
+
+
+# bi_directional search
+FORE = 1
+BACK = 0
+
+
+class State0:
+    def __init__(self, board, space, prev, dir):
+        self.board = board
+        self.space = space
+        self.prev = prev
+        self.dir = dir
+
+
+def bi_search(start):
+    r = RingBuffer
+    q = r.Queue(SIZE)
+    table = {}
+    a = State0(start, start.index(0), None, FORE)
+    q.enqueue(a)
+    table[tuple(start)] = a
+    a = State0(GOAL, GOAL.index(0), None, BACK)
+    q.enqueue(a)
+    table[tuple(GOAL)] = a
+    while not q.isEmpty():
+        a = q.dequeue()
+        for x in adjacent[a.space]:
+            b = a.board[:]
+            b[a.space] = b[x]
+            b[x] = 0
+            key = tuple(b)
+            if key in table:
+                c = table[key]
+                if c.dir != a.dir:
+                    # Found!
+                    print_answer1(a, c)
+                    return
+            else:
+                c = State0(b, x, a, a.dir)
+                q.enqueue(c)
+                table[key] = c
+
+
+def print_answer_goal(a):
+    while a is not None:
+        print a.board
+        a = a.prev
+
+
+def print_answer1(a, b):
+    if a.dir == FORE:
+        print_answer(a)
+        print_answer_goal(b)
+    else:
+        print_answer(b)
+        print_answer_goal(a)
+
+
 if __name__ == '__main__':
-    bf_search([8, 6, 7, 2, 5, 4, 3, 0, 1])
+    bi_search([8, 6, 7, 2, 5, 4, 3, 0, 1])
