@@ -118,5 +118,153 @@ def print_answer1(a, b):
         print_answer_goal(a)
 
 
-if __name__ == '__main__':
-    bi_search([8, 6, 7, 2, 5, 4, 3, 0, 1])
+#if __name__ == '__main__':
+#    bi_search([8, 6, 7, 2, 5, 4, 3, 0, 1])
+
+
+#  the longest
+
+
+class State00:
+    def __init__(self, board, space, prev, move):
+        self.board = board
+        self.space = space
+        self.prev = prev
+        self.move = move
+
+
+def search_longest_move():
+    buff = [None] * SIZE
+    a = State00(GOAL, GOAL.index(0), None, 0)
+    buff[0] = a
+    front = 0
+    rear = 1
+    table = {}
+    table[tuple(GOAL)] = a
+    while front < rear:
+        a = buff[front]
+        for x in adjacent[a.space]:
+            b = a.board[:]
+            b[a.space] = b[x]
+            b[x] = 0
+            key = tuple(b)
+            if key in table:
+                continue
+            c = State00(b, x, a, a.move + 1)
+            buff[rear] = c
+            rear += 1
+            table[key] = c
+        front += 1
+    n = SIZE - 1
+    move = buff[n].move
+    print 'move=', move
+    while buff[n].move == move:
+        print buff[n].board
+        n -= 1
+
+
+#if __name__ == '__main__':
+#    search_longest_move()
+
+
+# Iterative Deeping
+
+
+board = [8, 6, 7, 2, 5, 4, 3, 0, 1]
+move_piece = [None] * 32
+
+
+def id_search(limit, move, space):
+    if move == limit:
+        if board == GOAL:
+            global count
+            count += 1
+            print move_piece[1:]
+    else:
+        for x in adjacent[space]:
+            p = board[x]
+            if move_piece[move] == p:
+                continue
+            # move piece
+            board[space] = p
+            board[x] = 0
+            move_piece[move + 1] = p
+            id_search(limit, move + 1, x)
+            # reset
+            board[space] = 0
+            board[x] = p
+
+
+count = 0
+#import time
+#s = time.clock()
+#for x in xrange(1, 32):
+#    print 'move ', x
+#    id_search(x, 0, board.index(0), [-1])
+#    if count > 0:
+#        break
+#e = time.clock()
+#print "%.3f" % (e - s)
+
+
+# Lower Bound
+
+
+distance = (
+        (),
+        (0, 1, 2, 1, 2, 3, 2, 3, 4),
+        (1, 0, 1, 2, 1, 2, 3, 2, 3),
+        (2, 1, 0, 3, 2, 1, 4, 3, 2),
+        (1, 2, 3, 0, 1, 2, 1, 2, 3),
+        (2, 1, 2, 1, 0, 1, 2, 1, 2),
+        (3, 2, 1, 2, 1, 0, 3, 2, 1),
+        (2, 3, 4, 1, 2, 3, 0, 1, 2),
+        (3, 2, 3, 2, 1, 2, 1, 0, 1)
+        )
+
+
+def get_distance(board):
+    v = 0
+    for x in xrange(9):
+        p = board[x]
+        if p == 0:
+            continue
+        v += distance[p][x]
+    return v
+
+
+def id_lower_search(limit, move, space, lower):
+    if move == limit:
+        if board == GOAL:
+            global count
+            count += 1
+            print move_piece[1:]
+    else:
+        for x in adjacent[space]:
+            p = board[x]
+            if move_piece[move] == p:
+                continue
+            # move piece
+            board[space] = p
+            board[x] = 0
+            move_piece[move + 1] = p
+            new_lower = lower - distance[p][x] + distance[p][space]
+            # lower-bound search
+            if new_lower + move <= limit:
+                id_lower_search(limit, move + 1, x, new_lower)
+            # reverse
+            board[space] = 0
+            board[x] = p
+
+
+count = 0
+import time
+s = time.clock()
+n = get_distance(board)
+for x in xrange(n, 32):
+    print 'move', x
+    id_lower_search(x, 0, board.index(0), n)
+    if count > 0:
+        break
+e = time.clock()
+print "%.3f" % (e - s)
